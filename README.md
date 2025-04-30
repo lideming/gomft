@@ -174,7 +174,7 @@ The CSV output includes the following columns:
 - `MftModified`
 - `Accessed`
 
-File names and full paths are quoted in the CSV output to handle special characters.
+The CSV writer automatically handles quoting of fields that contain special characters like commas or quotes.
 
 # References
 In no particular order, these pages and programs have helped me build gomft.
