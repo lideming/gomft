@@ -466,6 +466,31 @@ func generateCSV(mftFilePath, csvFilePath string) error {
                 
                 // Process each file name attribute
                 for _, fileNameAttr := range info.FileNameAttributes {
+                        // Get file size information
+                        allocatedSize := fileNameAttr.AllocatedSize
+                        actualSize := fileNameAttr.ActualSize
+                        
+                        // If file size is zero in the FileName attribute, try to get it from the DATA attribute
+                        if actualSize == 0 && !info.IsDirectory {
+                            // Find DATA attributes for this record
+                            dataAttrs := record.FindAttributes(mft.AttributeTypeData)
+                            for _, dataAttr := range dataAttrs {
+                                // Skip attributes with names (usually alternate data streams)
+                                if dataAttr.Name != "" {
+                                    continue
+                                }
+                                
+                                // Use the size from the DATA attribute
+                                if dataAttr.ActualSize > 0 {
+                                    actualSize = dataAttr.ActualSize
+                                }
+                                if dataAttr.AllocatedSize > 0 {
+                                    allocatedSize = dataAttr.AllocatedSize
+                                }
+                                break
+                            }
+                        }
+                        
                         // Create CSV record - the CSV writer will handle quoting automatically
                         csvRecord := []string{
                                 fmt.Sprintf("%d", info.RecordNumber),
@@ -473,8 +498,8 @@ func generateCSV(mftFilePath, csvFilePath string) error {
                                 fmt.Sprintf("%d", info.Parent),
                                 fmt.Sprintf("%t", info.IsDirectory),
                                 fmt.Sprintf("%t", !info.IsInUse),
-                                fmt.Sprintf("%d", fileNameAttr.AllocatedSize),
-                                fmt.Sprintf("%d", fileNameAttr.ActualSize),
+                                fmt.Sprintf("%d", allocatedSize),
+                                fmt.Sprintf("%d", actualSize),
                                 fileNameAttr.Creation.Format(time.RFC3339),
                                 fileNameAttr.FileLastModified.Format(time.RFC3339),
                                 fileNameAttr.MftLastModified.Format(time.RFC3339),
