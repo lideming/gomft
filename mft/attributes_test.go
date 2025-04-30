@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/t9t/gomft/mft"
+	"github.com/lideming/gomft/mft"
 )
 
 func TestFileAttribute(t *testing.T) {

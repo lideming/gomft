@@ -1,7 +1,9 @@
-# gomft [![Build Status](https://travis-ci.com/t9t/gomft.svg?branch=master)](https://travis-ci.com/t9t/gomft) [![GoDoc](https://godoc.org/github.com/t9t/gomft?status.svg)](https://godoc.org/github.com/t9t/gomft)
+# gomft
 
 gomft is Go library to parse the Master File Table (MFT) of NFTS volumes. `mftdump` is a utility to dump the MFT of a
 mounted volume to a file.
+
+This is a fork of [t9t/gomft](https://github.com/t9t/gomft) with added CSV output functionality.
 
 Example usage reading MFT records from a file that was previously dumped with a record size of 1KB:
 
@@ -9,39 +11,39 @@ Example usage reading MFT records from a file that was previously dumped with a 
 package main
 
 import (
-	"errors"
-	"io"
-	"log"
-	"os"
+        "errors"
+        "io"
+        "log"
+        "os"
 
-	"github.com/t9t/gomft/mft"
+        "github.com/lideming/gomft/mft"
 )
 
 func main() {
-	f, err := os.Open(os.Args[1])
-	if err != nil {
-		log.Fatalln("Unable to open file", err)
-	}
-	defer f.Close()
+        f, err := os.Open(os.Args[1])
+        if err != nil {
+                log.Fatalln("Unable to open file", err)
+        }
+        defer f.Close()
 
-	recordSize := 1024
-	for {
-		buf := make([]byte, recordSize)
-		_, err := io.ReadFull(f, buf)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			log.Fatalln("Unable to read record data", err)
-		}
+        recordSize := 1024
+        for {
+                buf := make([]byte, recordSize)
+                _, err := io.ReadFull(f, buf)
+                if err != nil {
+                        if errors.Is(err, io.EOF) {
+                                break
+                        }
+                        log.Fatalln("Unable to read record data", err)
+                }
 
-		record, err := mft.ParseRecord(buf)
-		if err != nil {
-			log.Fatalln("Unable to parse MFT record", err)
-		}
+                record, err := mft.ParseRecord(buf)
+                if err != nil {
+                        log.Fatalln("Unable to parse MFT record", err)
+                }
 
-		log.Println("Read MFT record", record.FileReference)
-	}
+                log.Println("Read MFT record", record.FileReference)
+        }
 }
 ```
 
@@ -64,56 +66,56 @@ package:
 package main
 
 import (
-	"io"
-	"log"
-	"os"
+        "io"
+        "log"
+        "os"
 
-	"github.com/t9t/gomft/bootsect"
+        "github.com/lideming/gomft/bootsect"
 )
 
 func main() {
-	f, err := os.Open(`\\.\C:`)
-	if err != nil {
-		log.Fatalln("Unable to open C:", err)
-	}
-	defer f.Close()
+        f, err := os.Open(`\\.\C:`)
+        if err != nil {
+                log.Fatalln("Unable to open C:", err)
+        }
+        defer f.Close()
 
-	buf := make([]byte, 512)
-	_, err = io.ReadFull(f, buf)
-	if err != nil {
-		log.Fatalln("Unable to read bootsector data", err)
-	}
+        buf := make([]byte, 512)
+        _, err = io.ReadFull(f, buf)
+        if err != nil {
+                log.Fatalln("Unable to read bootsector data", err)
+        }
 
-	bootSector, err := bootsect.Parse(buf)
-	if err != nil {
-		log.Fatalln("Unable to parse boot sector")
-	}
+        bootSector, err := bootsect.Parse(buf)
+        if err != nil {
+                log.Fatalln("Unable to parse boot sector")
+        }
 
-	log.Printf("Boot sector of C:\\:\n%+v\n", bootSector)
+        log.Printf("Boot sector of C:\\:\n%+v\n", bootSector)
 }
 ```
 
-See: https://godoc.org/github.com/t9t/gomft/bootsect
+See: https://godoc.org/github.com/lideming/gomft/bootsect
 
 ## Additional utilities
 
 ### Fragment reader
 Use the `fragment` package to read fragmented data, for example as obtained from DataRuns in MFT records. Use
-[`mft.DataRunsToFragments()`](https://godoc.org/github.com/t9t/gomft/mft#DataRunsToFragments) to translate DataRuns
+[`mft.DataRunsToFragments()`](https://godoc.org/github.com/lideming/gomft/mft#DataRunsToFragments) to translate DataRuns
 into fragments.
 
-See: https://godoc.org/github.com/t9t/gomft/fragment
+See: https://godoc.org/github.com/lideming/gomft/fragment
 
 ### bintuil & BinReader
 The `binutil` package contains some functions to help using binary data, primarily `binutil.Duplicate()` to duplicate
 a slice of bytes and `BinReader` to interpret binary data according to a certain byte order (little/big endian).
 
-See: https://godoc.org/github.com/t9t/gomft/binutil
+See: https://godoc.org/github.com/lideming/gomft/binutil
 
 ### utf16
 The `utf16` package contains the `DecodeString` function to decode a byte slice to a string using a certain byte order.
 
-See: https://godoc.org/github.com/t9t/gomft/utf16
+See: https://godoc.org/github.com/lideming/gomft/utf16
 
 ## Disclaimer
 This package is far from complete and the implementation scrambled together from various bits of (often conflicting)
@@ -129,18 +131,50 @@ Usage:
 
 ```
 usage: mftdump [flags] <volume> <output file>
+       mftdump -csv-only [flags] <volume>
 
 Dump the MFT of a volume to a file. The volume should be NTFS formatted.
+Optionally generate a CSV file with MFT information.
 
 Flags:
+  -csv
+        output CSV data
+  -csv-file string
+        output CSV data to file (implies -csv)
+  -csv-only
+        output only CSV data (no MFT dump)
   -f    force; overwrite the output file if it already exists
+  -full-path
+        include full path in CSV output
   -p    progress; show progress during dumping
   -v    verbose; print details about what's going on
 
-For example: mftdump -v -f /dev/sdb1 ~/sdb1.mft
+Examples:
+  mftdump -v -f C: D:\c.mft
+  mftdump -csv C: D:\c.mft
+  mftdump -csv-file D:\c_mft.csv C: D:\c.mft
+  mftdump -csv-only C:
+  mftdump -csv-only -full-path C:
 ```
 
-On Windows, use it like this: `mftdump.exe -v -f C: D:\c.mft`
+## CSV Output
+
+The CSV output includes the following columns:
+
+- `FullPath` (optional, when using `-full-path`)
+- `RecordNumber`
+- `FileName`
+- `ParentRecordNumber`
+- `IsDirectory`
+- `IsDeleted`
+- `SizeAllocated`
+- `SizeActual`
+- `Created`
+- `Modified`
+- `MftModified`
+- `Accessed`
+
+File names and full paths are quoted in the CSV output to handle special characters.
 
 # References
 In no particular order, these pages and programs have helped me build gomft.

@@ -1,4 +1,4 @@
-module github.com/t9t/gomft
+module github.com/lideming/gomft
 
 go 1.13
 

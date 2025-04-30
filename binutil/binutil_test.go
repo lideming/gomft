@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/t9t/gomft/binutil"
+	"github.com/lideming/gomft/binutil"
 )
 
 func TestIsOnlyZeroesYes(t *testing.T) {

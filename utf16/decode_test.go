@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/t9t/gomft/utf16"
+	"github.com/lideming/gomft/utf16"
 )
 
 func TestDecodeString_LittleEndian(t *testing.T) {

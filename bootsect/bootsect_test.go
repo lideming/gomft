@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/t9t/gomft/bootsect"
+	"github.com/lideming/gomft/bootsect"
 )
 
 func TestParse(t *testing.T) {

@@ -7,7 +7,7 @@ package bootsect
 import (
 	"fmt"
 
-	"github.com/t9t/gomft/binutil"
+	"github.com/lideming/gomft/binutil"
 )
 
 // BootSector represents the parsed data of an NTFS boot sector. The OemId should typically be "NTFS    " ("NTFS"
