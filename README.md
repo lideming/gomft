@@ -9,39 +9,39 @@ Example usage reading MFT records from a file that was previously dumped with a 
 package main
 
 import (
-	"errors"
-	"io"
-	"log"
-	"os"
+        "errors"
+        "io"
+        "log"
+        "os"
 
-	"github.com/t9t/gomft/mft"
+        "github.com/t9t/gomft/mft"
 )
 
 func main() {
-	f, err := os.Open(os.Args[1])
-	if err != nil {
-		log.Fatalln("Unable to open file", err)
-	}
-	defer f.Close()
+        f, err := os.Open(os.Args[1])
+        if err != nil {
+                log.Fatalln("Unable to open file", err)
+        }
+        defer f.Close()
 
-	recordSize := 1024
-	for {
-		buf := make([]byte, recordSize)
-		_, err := io.ReadFull(f, buf)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			log.Fatalln("Unable to read record data", err)
-		}
+        recordSize := 1024
+        for {
+                buf := make([]byte, recordSize)
+                _, err := io.ReadFull(f, buf)
+                if err != nil {
+                        if errors.Is(err, io.EOF) {
+                                break
+                        }
+                        log.Fatalln("Unable to read record data", err)
+                }
 
-		record, err := mft.ParseRecord(buf)
-		if err != nil {
-			log.Fatalln("Unable to parse MFT record", err)
-		}
+                record, err := mft.ParseRecord(buf)
+                if err != nil {
+                        log.Fatalln("Unable to parse MFT record", err)
+                }
 
-		log.Println("Read MFT record", record.FileReference)
-	}
+                log.Println("Read MFT record", record.FileReference)
+        }
 }
 ```
 
@@ -64,32 +64,32 @@ package:
 package main
 
 import (
-	"io"
-	"log"
-	"os"
+        "io"
+        "log"
+        "os"
 
-	"github.com/t9t/gomft/bootsect"
+        "github.com/t9t/gomft/bootsect"
 )
 
 func main() {
-	f, err := os.Open(`\\.\C:`)
-	if err != nil {
-		log.Fatalln("Unable to open C:", err)
-	}
-	defer f.Close()
+        f, err := os.Open(`\\.\C:`)
+        if err != nil {
+                log.Fatalln("Unable to open C:", err)
+        }
+        defer f.Close()
 
-	buf := make([]byte, 512)
-	_, err = io.ReadFull(f, buf)
-	if err != nil {
-		log.Fatalln("Unable to read bootsector data", err)
-	}
+        buf := make([]byte, 512)
+        _, err = io.ReadFull(f, buf)
+        if err != nil {
+                log.Fatalln("Unable to read bootsector data", err)
+        }
 
-	bootSector, err := bootsect.Parse(buf)
-	if err != nil {
-		log.Fatalln("Unable to parse boot sector")
-	}
+        bootSector, err := bootsect.Parse(buf)
+        if err != nil {
+                log.Fatalln("Unable to parse boot sector")
+        }
 
-	log.Printf("Boot sector of C:\\:\n%+v\n", bootSector)
+        log.Printf("Boot sector of C:\\:\n%+v\n", bootSector)
 }
 ```
 
@@ -133,14 +133,51 @@ usage: mftdump [flags] <volume> <output file>
 Dump the MFT of a volume to a file. The volume should be NTFS formatted.
 
 Flags:
-  -f    force; overwrite the output file if it already exists
-  -p    progress; show progress during dumping
-  -v    verbose; print details about what's going on
+  -f        force; overwrite the output file if it already exists
+  -p        progress; show progress during dumping
+  -v        verbose; print details about what's going on
+  -csv      output MFT records as CSV file
+  -csv-only output only CSV file without dumping the MFT
+  -csv-file string
+            CSV output file path (if not specified, uses <output file>.csv)
 
 For example: mftdump -v -f /dev/sdb1 ~/sdb1.mft
 ```
 
 On Windows, use it like this: `mftdump.exe -v -f C: D:\c.mft`
+
+### CSV Output
+
+When using the `-csv` flag, mftdump will generate a CSV file containing parsed MFT records. This is useful for analyzing the MFT data in spreadsheet applications or for further processing. The CSV file includes the following columns:
+
+- RecordNumber: The MFT record number
+- SequenceNumber: The sequence number of the record
+- InUse: Whether the record is in use
+- IsDirectory: Whether the record represents a directory
+- HasFileName: Whether the record has a file name attribute
+- FileName: The name of the file (if available)
+- ParentRecordNumber: The record number of the parent directory
+- ParentSequenceNumber: The sequence number of the parent directory
+- Creation: File creation time
+- LastModified: Last time the file was modified
+- MftLastModified: Last time the MFT record was modified
+- LastAccess: Last access time
+- AllocatedSize: Allocated size in bytes
+- ActualSize: Actual size in bytes
+- FileAttributes: File attributes bitmask
+
+Example usage:
+```
+# Create both MFT dump and CSV file
+mftdump -v -f -csv /dev/sdb1 ~/sdb1.mft
+
+# Create only CSV file without dumping the MFT
+mftdump -v -f -csv-only /dev/sdb1 ~/sdb1.csv
+```
+
+When using `-csv`, this will create both the raw MFT dump file (`~/sdb1.mft`) and a CSV file (`~/sdb1.mft.csv`).
+
+When using `-csv-only`, only the CSV file will be created without dumping the entire MFT. This is useful when you only need the CSV data for analysis and don't need the raw MFT dump.
 
 # References
 In no particular order, these pages and programs have helped me build gomft.
